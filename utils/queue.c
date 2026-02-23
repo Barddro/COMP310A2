@@ -31,7 +31,7 @@ int enqueuesorted_q(Queue* q, PCB* e) {
     Queue* curr = q;
 
     // stop at node BEFORE insertion point
-    while (curr->next && curr->next->e->age < e->age) {
+    while (curr->next && curr->next->e->job_score < e->job_score) {
         curr = curr->next;
     }
 

@@ -3,8 +3,8 @@ CFLAGS = -Wall -Iutils
 FMT = indent
 
 # Source files
-SRC = shell.c interpreter.c shellmemory.c \
-      utils/dynamicarr.c utils/pcb.c utils/queue.c scheduler.c
+SRC = shell.c interpreter.c shellmemory.c scheduler.c \
+      utils/dynamicarr.c utils/pcb.c utils/queue.c utils/vector.c
 
 # Object files (auto-convert .c → .o)
 OBJ = $(SRC:.c=.o)
@@ -23,7 +23,8 @@ style:
 	       utils/dynamicarr.c utils/dynamicarr.h \
 	       utils/pcb.c utils/pcb.h \
 	       utils/queue.c utils/queue.h \
-		   scheduler.c scheduler.h
+		   scheduler.c scheduler.h \
+		   utils/vector.c utils/vector.h
 
 clean:
 	$(RM) mysh $(OBJ) *~

@@ -17,6 +17,7 @@ PCB* init_pcb(char* path) {
 
     if (file_ptr == NULL) {
         printf("Error opening script file");
+        free_arr(pcb->lines);
         free(pcb);
         return NULL;
     }
@@ -27,14 +28,14 @@ PCB* init_pcb(char* path) {
     }
 
     fclose(file_ptr);
+
+    pcb->job_score = pcb->lines->length;
     return pcb;
 }
 
-// CREATE AN INITAGE_PCB HERE
-
 char* getline_pcb(PCB* pcb) {  // returns current line of program to execute and increments pc
-    if (pcb->pc > pcb->lines->length) {
-        perror("trying to access beyond length of lines");
+    if (pcb->pc >= pcb->lines->length) {
+        return NULL;
     }
 
     char* temp = get_arr(pcb->lines, pcb->pc);
@@ -53,4 +54,8 @@ void print_pcb(PCB* pcb) {
     for (int i = 0; i < pcb->lines->length; i++) {
         printf("%s\n", get_arr(pcb->lines, i));
     }
+}
+
+int haslines_pcb(PCB* pcb) {
+    return pcb->pc < pcb->lines->length;
 }

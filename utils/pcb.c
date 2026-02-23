@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdio.h>
 
-int next_pid = 0; // counter for pid's
+int next_pid = 1; // counter for pid's
 
 PCB* init_pcb(char* path) {
     PCB* pcb = malloc(sizeof(PCB));

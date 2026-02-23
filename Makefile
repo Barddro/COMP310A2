@@ -1,5 +1,6 @@
 CC = gcc
 CFLAGS = -Wall -Iutils
+DEBUG_FLAGS = -g -O0
 FMT = indent
 
 # Source files
@@ -9,9 +10,17 @@ SRC = shell.c interpreter.c shellmemory.c scheduler.c \
 # Object files (auto-convert .c → .o)
 OBJ = $(SRC:.c=.o)
 
-# Target
+# -----------------------
+# Default build (normal)
+# -----------------------
 mysh: $(OBJ)
 	$(CC) $(CFLAGS) -o mysh $(OBJ)
+
+# -----------------------
+# Debug build
+# -----------------------
+debug: CFLAGS += $(DEBUG_FLAGS)
+debug: clean mysh
 
 # Compile rule
 %.o: %.c
@@ -23,8 +32,8 @@ style:
 	       utils/dynamicarr.c utils/dynamicarr.h \
 	       utils/pcb.c utils/pcb.h \
 	       utils/queue.c utils/queue.h \
-		   scheduler.c scheduler.h \
-		   utils/vector.c utils/vector.h
+	       scheduler.c scheduler.h \
+	       utils/vector.c utils/vector.h
 
 clean:
 	$(RM) mysh $(OBJ) *~

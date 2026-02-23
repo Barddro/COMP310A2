@@ -15,3 +15,4 @@ void free_arr(DynamicArr* dyn_arr);
 void print_arr(DynamicArr* dyn_arr);
 
 #endif
+

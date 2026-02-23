@@ -1,5 +1,6 @@
 #include "queue.h"
 #include <stdlib.h>
+#include <stdio.h>
 // Queue implementation using dummy node for edge case handling
 
 Queue* init_q() {
@@ -31,7 +32,7 @@ int enqueuesorted_q(Queue* q, PCB* e) {
     Queue* curr = q;
 
     // stop at node BEFORE insertion point
-    while (curr->next && curr->next->e->job_score < e->job_score) {
+    while (curr->next && curr->next->e->job_score <= e->job_score) {
         curr = curr->next;
     }
 
@@ -44,6 +45,7 @@ int enqueuesorted_q(Queue* q, PCB* e) {
 
 PCB* dequeue_q(Queue* q) {
     if (!q->next) {
+        printf("queue is empty");
         return NULL;  // empty queue
     }
 

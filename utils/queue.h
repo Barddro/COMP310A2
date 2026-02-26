@@ -17,6 +17,7 @@ void free_q(Queue* q);
 int isempty_q(Queue* q);
 void clear_q(Queue* q);
 int enqueuesorted_q(Queue* q, PCB* e);
-int enqueuesortedleq_q(Queue* q, PCB* e);
+int enqueuehead_q(Queue* q, PCB* e);
+int enqueue_q(Queue* q, PCB* e);
 
 #endif

@@ -16,7 +16,8 @@ enum Policies {
     FCFS,
     SJF,
     RR,
-    AGING
+    AGING,
+    RR30
 };
 
 extern Queue* ready_queue;

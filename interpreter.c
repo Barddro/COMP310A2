@@ -57,7 +57,7 @@ int touch(char *path);
 int cd(char *path);
 int source(char *script);
 int run(char *args[], int args_size);
-int exec(char* programs[], int programs_size, int policy);
+int exec(char* programs[], int programs_size, int policy, int bg, int mt);
 int badcommandFileDoesNotExist();
 
 // Interpret commands and their arguments
@@ -142,26 +142,50 @@ int interpreter(char *command_args[], int args_size) {
         return run(&command_args[1], args_size - 1);
 
     } else if (strcmp(command_args[0], "exec") == 0) {
-        if (args_size < 3 || args_size > 5)
+        if (args_size < 3 || args_size > 7) 
             return badcommand();
         
+        // check for MT and # optional parameters
+        int mt = 0;
+        int bg = 0;
+
+        char* temp_arg = command_args[args_size - 1];
+
+        if (strcmp(temp_arg, "MT") == 0) {
+            mt = 1;
+            temp_arg = command_args[args_size - 2];
+            if (strcmp(temp_arg, "#") == 0) {
+                bg = 1;
+                temp_arg = command_args[args_size - 3];
+            }
+        } else if (strcmp(temp_arg, "#") == 0) {
+            bg = 1;
+            temp_arg = command_args[args_size - 2];
+        }
+
         int policy;
         // check if policy string is valid and set policy enum
-        char* last_arg = command_args[args_size - 1];
-        if (strcmp(last_arg, "FCFS") == 0) {
+        if (strcmp(temp_arg, "FCFS") == 0) {
             policy = FCFS;
-        } else if (strcmp(last_arg, "SJF") == 0) {
+        } else if (strcmp(temp_arg, "SJF") == 0) {
             policy = SJF;
-        } else if (strcmp(last_arg, "RR") == 0) {
+        } else if (strcmp(temp_arg, "RR") == 0) {
             policy = RR;
-        } else if (strcmp(last_arg, "AGING") == 0) {
+        } else if (strcmp(temp_arg, "AGING") == 0) {
             policy = AGING;
+        } else if (strcmp(temp_arg, "RR30") == 0) {
+            policy = RR30;
         } else {
             return badcommand(); // invalid policy name
         }
 
-        int programs_size = args_size - 2; // exclude 'exec' and policy name
-        return exec(&command_args[1], programs_size, policy);
+        int programs_size = args_size - 2; // exclude 'exec', policy name, and possibly optional parameters
+        if (bg && mt) {
+            programs_size -= 2;
+        } else if (bg || mt) {
+            programs_size--;
+        }
+        return exec(&command_args[1], programs_size, policy, bg, mt);
 
     } else {
         return badcommand();
@@ -466,11 +490,12 @@ int is_duplicates(char* strings[], int strings_size) {
     return 0;
 }
 
-int exec(char* programs[], int programs_size, int policy) {
+int exec(char* programs[], int programs_size, int policy, int bg, int mt) {
 
-    if(is_duplicates(programs, programs_size)) {
+    if (is_duplicates(programs, programs_size)) {
         return 6;
     }
+
     
     // run programs and test for edge cases here
     PCB* curr;
@@ -482,9 +507,16 @@ int exec(char* programs[], int programs_size, int policy) {
         schedule(curr, policy);
     }
 
+    if (bg) { // assume batch mode
+        PCB* restofprogram = initfromfile_pcb(stdin);
+        if (restofprogram) {
+            enqueuehead_q(ready_queue, restofprogram);   
+        }
+    }
+
     int errcode = run_scheduler(policy);
     clear_q(ready_queue); // WHEN  WE START IMPLEMENTING BACKGROUND EXEC: DON'T CLEAR 
     return errcode;
 }
 
-
+// HELPER: gets remainder of lines from pcb

@@ -43,6 +43,14 @@ int enqueuesorted_q(Queue* q, PCB* e) {
     return 0;
 }
 
+int enqueuehead_q(Queue* q, PCB* e) {
+    Queue* temp = q->next;
+    Queue* newhead = createnode_q(e);
+    q->next = newhead;
+    newhead->next = temp;
+    return 0;
+}
+
 PCB* dequeue_q(Queue* q) {
     if (!q->next) {
         printf("queue is empty");

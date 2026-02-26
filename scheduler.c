@@ -35,6 +35,8 @@ int schedule(PCB* pcb, int policy) {
         return enqueue_q(ready_queue, pcb);
     } else if (policy == AGING) {
         return enqueuesorted_q(ready_queue, pcb);
+    } else if (policy == RR30) {
+        return enqueue_q(ready_queue, pcb);
     } else {
         return 1;
     }
@@ -43,6 +45,7 @@ int schedule(PCB* pcb, int policy) {
 int run_scheduler_FCFS_SJF();
 int run_scheduler_RR();
 int run_scheduler_AGING();
+int run_scheduler_RR30();
 
 int run_scheduler(int policy) {
 
@@ -52,6 +55,8 @@ int run_scheduler(int policy) {
         return run_scheduler_RR();
     } else if (policy == AGING) {
         return run_scheduler_AGING();
+    } else if (policy == RR30) {
+        return run_scheduler_RR30();
     } else {
         return 1;
     }
@@ -128,6 +133,32 @@ int run_scheduler_AGING() {
         }
     }
 
+    return err_code;
+}
+
+int run_scheduler_RR30() {
+    int err_code = 0;
+    char* line = NULL;
+
+    while (!isempty_q(ready_queue)) {
+
+        PCB* curr_process = dequeue_q(ready_queue);
+            
+        for (int i = 0; i < 30; i++) {
+            if (haslines_pcb(curr_process)) {
+                line = getline_pcb(curr_process);
+                err_code = parseInput(line);
+            } else {
+                break;
+            }
+        }
+
+        if (haslines_pcb(curr_process)) {
+            enqueue_q(ready_queue, curr_process);
+        } else {
+            free_pcb(curr_process); // equivalent to removing the script source code
+        }
+    }
     return err_code;
 }
 

@@ -13,6 +13,7 @@ char* get_arr(DynamicArr* dyn_arr, int i);
 void remove_arr(DynamicArr* dyn_arr);
 void free_arr(DynamicArr* dyn_arr);
 void print_arr(DynamicArr* dyn_arr);
+int isempty_arr(DynamicArr* dyn_arr);
 
 #endif
 

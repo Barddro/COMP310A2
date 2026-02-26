@@ -52,3 +52,7 @@ void print_arr(DynamicArr* dyn_arr) {
     }
     printf("\n");
 }
+
+int isempty_arr(DynamicArr* dyn_arr) {
+    return dyn_arr->length <= 0;
+}

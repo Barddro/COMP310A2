@@ -4,14 +4,6 @@
 #include "queue.h"
 #include "pcb.h"
 
-/*
-typedef struct {
-    Queue* FCFS;
-    Queue* SJF;
-    Queue* RR;
-} Scheduler;
-*/
-
 enum Policies {
     FCFS,
     SJF,
@@ -20,9 +12,25 @@ enum Policies {
     RR30
 };
 
-extern Queue* ready_queue;
+typedef struct {
+    Queue* queue; // actual queue (normal or blocking)
+    int (*enqueue)(Queue*, PCB*);
+    int (*enqueuesorted)(Queue*, PCB*);
+    int (*enqueuehead)(Queue*, PCB*);
+    PCB* (*dequeue)(Queue*);
+    PCB* (*peek)(Queue*);
+    int (*isempty)(Queue*);
+    void (*clear)(Queue*);
+} ReadyQueue;
+
+extern ReadyQueue* ready_queue;
 extern int policy;
-void init_scheduler();
+extern pthread_mutex_t ready_queue_mutex;
+extern pthread_cond_t ready_queue_notempty;
+extern int mt_enabled;
+extern int scheduler_running;
+extern pthread_t workers[2];
+ReadyQueue* init_scheduler();
 int schedule(PCB* pcb, int policy);
 int run_scheduler(int policy);
 

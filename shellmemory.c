@@ -44,7 +44,7 @@ void mem_init() {
         shellmemory[i].var = "none";
         shellmemory[i].value = "none";
     }
-    init_scheduler();
+    ready_queue = init_scheduler();
 }
 
 // Set key value pair

@@ -2,6 +2,7 @@
 #define QUEUE_H
 
 #include "pcb.h"
+#include <pthread.h>
 
 typedef struct Queue {
     PCB* e;
@@ -19,5 +20,11 @@ void clear_q(Queue* q);
 int enqueuesorted_q(Queue* q, PCB* e);
 int enqueuehead_q(Queue* q, PCB* e);
 int enqueue_q(Queue* q, PCB* e);
+int blocking_enqueue_q(Queue* q, PCB* e);
+int blocking_enqueuesorted_q(Queue* q, PCB* e);
+int blocking_enqueuehead_q(Queue* q, PCB* e);
+PCB* blocking_dequeue_q(Queue* q);
+PCB* blocking_peek_q(Queue* q);
+int blocking_isempty_q(Queue* q);
 
 #endif

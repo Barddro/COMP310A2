@@ -24,6 +24,7 @@
 #include "shell.h"
 #include "pcb.h"
 #include "scheduler.h"
+#include "interpreter.h"
 
 int badcommand() {
     printf("Unknown Command\n");
@@ -207,6 +208,12 @@ source SCRIPT.TXT		Executes the file SCRIPT.TXT\n ";
 
 int quit() {
     printf("Bye!\n");
+    if(mt_enabled) {
+        scheduler_running = 0;
+        pthread_cond_broadcast(&ready_queue_notempty);
+        pthread_join(workers[0], NULL);
+        pthread_join(workers[1], NULL);
+    }
     exit(0);
 }
 
@@ -496,7 +503,8 @@ int exec(char* programs[], int programs_size, int policy, int bg, int mt) {
         return 6;
     }
 
-    
+    mt_enabled = mt;
+
     // run programs and test for edge cases here
     PCB* curr;
     for (int i = 0; i < programs_size; i++) {
@@ -510,12 +518,15 @@ int exec(char* programs[], int programs_size, int policy, int bg, int mt) {
     if (bg) { // assume batch mode
         PCB* restofprogram = initfromfile_pcb(stdin);
         if (restofprogram) {
-            enqueuehead_q(ready_queue, restofprogram);   
+            ready_queue->enqueuehead(ready_queue->queue, restofprogram);   
         }
     }
 
     int errcode = run_scheduler(policy);
-    clear_q(ready_queue); // WHEN  WE START IMPLEMENTING BACKGROUND EXEC: DON'T CLEAR 
+    // join threads here?
+    if (!bg && !mt_enabled) {
+        ready_queue->clear(ready_queue->queue);
+    }
     return errcode;
 }
 

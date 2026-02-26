@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <pthread.h>
 #include "shellmemory.h"
 #include "dynamicarr.h"
 #include "queue.h"
@@ -12,6 +13,8 @@ struct memory_struct {
 };
 
 struct memory_struct shellmemory[MEM_SIZE];
+
+pthread_mutex_t shellmem_mutex;
 
 // data structure for storing program lines
 // note: program code is separated from each other
@@ -44,6 +47,7 @@ void mem_init() {
         shellmemory[i].var = "none";
         shellmemory[i].value = "none";
     }
+    pthread_mutex_init(&shellmem_mutex, NULL);
     ready_queue = init_scheduler();
 }
 
@@ -51,6 +55,10 @@ void mem_init() {
 void mem_set_value(char *var_in, char *value_in) {
     int i;
 
+    if(mt_enabled) {
+        pthread_mutex_lock(&shellmem_mutex);
+    }
+    
     for (i = 0; i < MEM_SIZE; i++) {
         if (strcmp(shellmemory[i].var, var_in) == 0) {
             shellmemory[i].value = strdup(value_in);
@@ -67,6 +75,10 @@ void mem_set_value(char *var_in, char *value_in) {
         }
     }
 
+    if(mt_enabled) {
+        pthread_mutex_unlock(&shellmem_mutex);
+    }
+    
     return;
 }
 

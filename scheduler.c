@@ -95,6 +95,7 @@ int run_scheduler(int policy) {
     }
 }
 
+// scheduler running process for BOTH FCFS and SJF
 int run_scheduler_FCFS_SJF() {
     int err_code = 0;
     char* line = NULL;

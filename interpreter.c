@@ -16,6 +16,7 @@
 #include <dirent.h>             // scandir
 #include <unistd.h>             // chdir
 #include <sys/stat.h>           // mkdir
+#include <pthread.h>            // multithreading scheduler
 // for run:
 #include <sys/types.h>          // pid_t
 #include <sys/wait.h>           // waitpid
@@ -143,29 +144,31 @@ int interpreter(char *command_args[], int args_size) {
         return run(&command_args[1], args_size - 1);
 
     } else if (strcmp(command_args[0], "exec") == 0) {
-        if (args_size < 3 || args_size > 7) 
+        if (args_size < 3 || args_size > 7)
             return badcommand();
         
         // check for MT and # optional parameters
         int mt = 0;
         int bg = 0;
 
-        char* temp_arg = command_args[args_size - 1];
+        char* temp_arg = command_args[args_size - 1]; // last argument of command
 
-        if (strcmp(temp_arg, "MT") == 0) {
+        if (strcmp(temp_arg, "MT") == 0) { // check for MT parameter
             mt = 1;
             temp_arg = command_args[args_size - 2];
-            if (strcmp(temp_arg, "#") == 0) {
+            if (strcmp(temp_arg, "#") == 0) { // check for # if MT parameter exists
                 bg = 1;
                 temp_arg = command_args[args_size - 3];
             }
-        } else if (strcmp(temp_arg, "#") == 0) {
+        } else if (strcmp(temp_arg, "#") == 0) { // check for # if MT parameter doesn't exist
             bg = 1;
             temp_arg = command_args[args_size - 2];
         }
 
+        // check if policy string is valid and set policy int
+
         int policy;
-        // check if policy string is valid and set policy enum
+
         if (strcmp(temp_arg, "FCFS") == 0) {
             policy = FCFS;
         } else if (strcmp(temp_arg, "SJF") == 0) {
@@ -208,7 +211,7 @@ source SCRIPT.TXT		Executes the file SCRIPT.TXT\n ";
 
 int quit() {
     printf("Bye!\n");
-    if(mt_enabled) {
+    if (mt_enabled) { // for multithreading, we join with the scheduler threads
         scheduler_running = 0;
         pthread_cond_broadcast(&ready_queue_notempty);
         pthread_join(workers[0], NULL);
@@ -414,39 +417,11 @@ int cd(char *path) {
 int source(char *script) {
     
     PCB* pcb = init_pcb(script); // PCB contains logic for loading script
-    schedule(pcb,FCFS);
+    schedule(pcb,FCFS); // enqueue pcb to ready queue with FCFS policy
     run_scheduler(FCFS);
-    return 0; // errCode = 0 (change this later)
+    return 0;
 
 }
-
-// original source()
-/*
-int source(char *script) {
-    int errCode = 0;
-    char line[MAX_USER_INPUT];
-    FILE *p = fopen(script, "rt");      // the program is in a file
-
-    if (p == NULL) {
-        return badcommandFileDoesNotExist();
-    }
-
-    fgets(line, MAX_USER_INPUT - 1, p);
-    while (1) {
-        errCode = parseInput(line);     // which calls interpreter()
-        memset(line, 0, sizeof(line));
-
-        if (feof(p)) {
-            break;
-        }
-        fgets(line, MAX_USER_INPUT - 1, p);
-    }
-
-    fclose(p);
-
-    return errCode;
-}
-*/
 
 int run(char *args[], int arg_size) {
     // copy the args into a new NULL-terminated array.
@@ -485,6 +460,8 @@ int run(char *args[], int arg_size) {
     return 0;
 }
 
+// Helper function that checks if two strings in the same array are duplicates
+// Used for exec to ensure two of the same program aren't scheduled together
 int is_duplicates(char* strings[], int strings_size) {
     for(int i = 0; i < strings_size; i++) {
         for (int j = i; j < strings_size; j++) {
@@ -499,35 +476,35 @@ int is_duplicates(char* strings[], int strings_size) {
 
 int exec(char* programs[], int programs_size, int policy, int bg, int mt) {
 
-    if (is_duplicates(programs, programs_size)) {
+    if (is_duplicates(programs, programs_size)) { // check for duplicate programs in argument
         return 6;
     }
 
-    mt_enabled = mt;
+    mt_enabled = mt; // need to assign mt to the global variable in scheduler
 
-    // run programs and test for edge cases here
-    PCB* curr;
+    // initialize PCBs and schedule programs
+    PCB* temp_pcb;
     for (int i = 0; i < programs_size; i++) {
-        if ((curr = init_pcb(programs[i])) == NULL) {
-            perror("Error loading scripts"); // maybe wrap this in an error function later (e.g. badcommand)   
+        if ((temp_pcb = init_pcb(programs[i])) == NULL) {
+            perror("Error loading scripts");   
             return 6;
         } 
-        schedule(curr, policy);
+        schedule(temp_pcb, policy);
     }
 
-    if (bg) { // assume batch mode
-        PCB* restofprogram = initfromfile_pcb(stdin);
+    if (bg) { // background mode - assume batch mode
+        PCB* restofprogram = initfromfile_pcb(stdin); // create PCB for rest of stdin lines
         if (restofprogram) {
-            ready_queue->enqueuehead(ready_queue->queue, restofprogram);   
+            ready_queue->enqueuehead(ready_queue->queue, restofprogram); // enqueue to head of ready queue
         }
     }
 
-    int errcode = run_scheduler(policy);
+    int err_code = run_scheduler(policy); // execute scheduled PCBs according to given policy
     // join threads here?
     if (!bg && !mt_enabled) {
-        ready_queue->clear(ready_queue->queue);
+        ready_queue->clear(ready_queue->queue); // clear ready queue after run_scheduler() ONLY if background mode and multithreading disabled
     }
-    return errcode;
+    return err_code;
 }
 
 // HELPER: gets remainder of lines from pcb

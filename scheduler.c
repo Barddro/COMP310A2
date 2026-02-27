@@ -6,6 +6,9 @@
 #include "vector.h"
 #include <pthread.h>
 
+// Scheduler interface for initializing and running the scheduling infrastructure 
+// with various policies
+
 //Queue* ready_queue;
 ReadyQueue* ready_queue;
 

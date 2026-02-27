@@ -14,7 +14,7 @@ struct memory_struct {
 
 struct memory_struct shellmemory[MEM_SIZE];
 
-pthread_mutex_t shellmem_mutex;
+pthread_mutex_t shellmem_mutex; // for making mem_set thread-safe
 
 // data structure for storing program lines
 // note: program code is separated from each other
@@ -24,7 +24,7 @@ typedef struct {
 } LoadedScript;
 */
 
-// NOTE: WE STORED PROGRAM LINES IN PCB -- NO DATA STRUCTURE HERE BUDDY
+// NOTE: We stored program lines in PCB. See PCB.c for more information.
 
 // Helper functions
 int match(char *model, char *var) {
@@ -55,7 +55,7 @@ void mem_init() {
 void mem_set_value(char *var_in, char *value_in) {
     int i;
 
-    if(mt_enabled) {
+    if (mt_enabled) {
         pthread_mutex_lock(&shellmem_mutex);
     }
     
@@ -75,7 +75,7 @@ void mem_set_value(char *var_in, char *value_in) {
         }
     }
 
-    if(mt_enabled) {
+    if (mt_enabled) {
         pthread_mutex_unlock(&shellmem_mutex);
     }
     

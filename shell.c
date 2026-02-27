@@ -61,9 +61,6 @@ int parseInput(char inp[]) {
     int wordlen;
     int errorCode = 0;
 
-    // REMOVE THIS LATER
-    // printf("DEBUG: %s\n", inp);
-
     // This function probably isn't the best place to handle chains.
     // That is, if we really wanted to implement relatively complex
     // syntax like that of bash, we should really just tokenize everything,

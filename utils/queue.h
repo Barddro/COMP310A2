@@ -1,11 +1,8 @@
 #ifndef QUEUE_H
 #define QUEUE_H
 
-#include "pcb.h"
-#include <pthread.h>
-
 typedef struct Queue {
-    PCB* e;
+    PCB* e; // element of queue
     struct Queue* next;
 } Queue;
 

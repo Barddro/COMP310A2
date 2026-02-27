@@ -1,18 +1,21 @@
-#include "queue.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include <pthread.h>
 #include "../scheduler.h"
-// Queue implementation using dummy node for edge case handling
+#include "pcb.h"
+#include "queue.h"
 
-//MUTEX HERE!
+// Queue interface for PCBs that the ReadyQueue struct wraps -
+// we used this instead of storing a 'next' pointer in each PCB.
+// Note: Uses dummy node for edge case handling
 
-// GET GLOBAL FLAG IS_MULTITHREADED THAT CHANGES HOW ENQUEUE/DEQUEUE WORKS
-
+// Initializes queue
 Queue* init_q() {
     Queue* dummy = createnode_q(0);
     return dummy;
 }
 
+// Helper method for other queue operations
 Queue* createnode_q(PCB* e) {
     Queue* node = malloc(sizeof(Queue));
     node->e = e;
@@ -20,6 +23,7 @@ Queue* createnode_q(PCB* e) {
     return node;
 }
 
+// Enqueues PCB to the back of the queue
 int enqueue_q(Queue* q, PCB* e) {
     Queue* curr = q;
     while (curr->next) {
@@ -29,14 +33,15 @@ int enqueue_q(Queue* q, PCB* e) {
     curr->next = new;
 
     return 0;
-
-    // do we want to return old head of q here?
 }
 
+// Enqueues PCB into specified queue in sorted order by job score
+// Pre-condition: Queue is sorted ascending by job score
+// Note: PCBs with equal job scores and enqueued after pre-existing ones
 int enqueuesorted_q(Queue* q, PCB* e) {
     Queue* curr = q;
 
-    // stop at node BEFORE insertion point
+    // stop at node before insertion point
     while (curr->next && curr->next->e->job_score <= e->job_score) {
         curr = curr->next;
     }
@@ -48,6 +53,7 @@ int enqueuesorted_q(Queue* q, PCB* e) {
     return 0;
 }
 
+// Enqueues PCB at the head of the specified queue - used for background mode scheduling
 int enqueuehead_q(Queue* q, PCB* e) {
     Queue* temp = q->next;
     Queue* newhead = createnode_q(e);
@@ -56,10 +62,11 @@ int enqueuehead_q(Queue* q, PCB* e) {
     return 0;
 }
 
+// Dequeues a PCB from the specified queue
 PCB* dequeue_q(Queue* q) {
     if (!q->next) {
         printf("queue is empty");
-        return NULL;  // empty queue
+        return NULL; // empty queue
     }
 
     Queue* first = q->next;
@@ -71,22 +78,25 @@ PCB* dequeue_q(Queue* q) {
     return value;
 }
 
+// Returns but does not dequeue the first PCB of the queue
 PCB* peek_q(Queue* q) {
     if (!q->next) return NULL;
     return q->next->e;
 }
 
+// Checks if queue is empty
 int isempty_q(Queue* q) {
     return (!q->next);
 }
 
+// Dequeues from the queue until it is empty
 void clear_q(Queue* q) {
-    //clear the queue so that it is empty
     while (!isempty_q(q)) {
         dequeue_q(q);
     }
 }
 
+// Frees queue from heap
 void free_q(Queue* q) {
     Queue* curr = q;
     while (curr) {
@@ -96,7 +106,7 @@ void free_q(Queue* q) {
     }
 }
 
-// ----- Blocking (Threadsafe) Methods -----
+// blocking (threadsafe) methods - used for multithreaded scheduling
 
 int blocking_enqueue_q(Queue* q, PCB* e) {
     Queue* curr = q;

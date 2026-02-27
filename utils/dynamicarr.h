@@ -5,7 +5,7 @@ typedef struct {
     int capacity;
     int length;
     char** arr;
-} DynamicArr; // This is a dynamic array specifically for strings
+} DynamicArr; // Dynamic array specifically for strings
 
 DynamicArr* init_arr(int capacity);
 void append_arr(DynamicArr* dyn_arr, char* line);
@@ -16,4 +16,3 @@ void print_arr(DynamicArr* dyn_arr);
 int isempty_arr(DynamicArr* dyn_arr);
 
 #endif
-

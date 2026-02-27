@@ -14,12 +14,11 @@ pthread_mutex_t ready_queue_mutex;
 pthread_cond_t ready_queue_notempty;
 
 // added for multithreading
-// -----
+
 int mt_enabled = 0;
 int scheduler_running = 1; //used for QUIT
 
 pthread_t workers[2];
-// -----
 
 ReadyQueue* init_scheduler() {
     ReadyQueue* rq = malloc(sizeof(ReadyQueue));

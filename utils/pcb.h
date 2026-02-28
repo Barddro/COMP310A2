@@ -1,5 +1,6 @@
 #ifndef PCB_H
 #define PCB_H
+#include "dynamicarr.h"
 
 #define MAX_LINE_SIZE 100 // each line is <= 100 characters
 

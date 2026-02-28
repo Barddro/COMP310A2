@@ -21,6 +21,10 @@ pthread_cond_t ready_queue_notempty;
 int mt_enabled = 0;
 int scheduler_running = 1; //used for QUIT
 
+int threads_working = 0; // tracks number of threads currently executing job
+pthread_cond_t threads_done_cond;
+pthread_mutex_t threads_working_mutex;
+
 pthread_t workers[2];
 
 ReadyQueue* init_scheduler() {
@@ -205,6 +209,10 @@ void* worker_RR(void* arg) {
 
         PCB* curr = ready_queue->dequeue(ready_queue->queue);
         if (!curr) continue;
+        
+        pthread_mutex_lock(&threads_working_mutex);
+        threads_working++;
+        pthread_mutex_unlock(&threads_working_mutex);
 
         for (int i = 0; i < 2; i++) {
             if (haslines_pcb(curr)) {
@@ -220,16 +228,24 @@ void* worker_RR(void* arg) {
         } else {
             free_pcb(curr);
         }
+        pthread_mutex_lock(&threads_working_mutex);
+        threads_working--;
+        pthread_cond_broadcast(&threads_done_cond);
+        pthread_mutex_unlock(&threads_working_mutex);
     }
     return NULL;
 }
 
 void* worker_RR30(void* arg) {
     while (scheduler_running) {
-
+        
         PCB* curr = ready_queue->dequeue(ready_queue->queue);
         if (!curr) continue;
 
+        pthread_mutex_lock(&threads_working_mutex);
+        threads_working++;
+        pthread_mutex_unlock(&threads_working_mutex);
+        
         for (int i = 0; i < 30; i++) {
             if (haslines_pcb(curr)) {
                 char* line = getline_pcb(curr);
@@ -244,6 +260,10 @@ void* worker_RR30(void* arg) {
         } else {
             free_pcb(curr);
         }
+        pthread_mutex_lock(&threads_working_mutex);
+        threads_working--;
+        pthread_cond_broadcast(&threads_done_cond);
+        pthread_mutex_unlock(&threads_working_mutex);
     }
     return NULL;
 }
@@ -253,6 +273,9 @@ void start_mt_scheduler(int policy) {
 
     pthread_mutex_init(&ready_queue_mutex, NULL);
     pthread_cond_init(&ready_queue_notempty, NULL);
+
+    pthread_mutex_init(&threads_working_mutex, NULL);
+    pthread_cond_init(&threads_done_cond, NULL);
 
     convert_to_mt_queue(ready_queue);
 
@@ -266,4 +289,3 @@ void start_mt_scheduler(int policy) {
         pthread_create(&workers[1], NULL, worker_RR30, NULL);
     }
 }
-

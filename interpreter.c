@@ -210,14 +210,28 @@ source SCRIPT.TXT		Executes the file SCRIPT.TXT\n ";
 }
 
 int quit() {
-    printf("Bye!\n");
+    
     if (mt_enabled) { // for multithreading, we join with the scheduler threads
+        pthread_mutex_lock(&threads_working_mutex);
+        while (threads_working > 0 || !ready_queue->isempty(ready_queue->queue)) {
+            //printf("waiting for done condition");
+            pthread_cond_broadcast(&ready_queue_notempty); 
+            pthread_cond_wait(&threads_done_cond, &threads_working_mutex);
+
+        }
+        pthread_mutex_unlock(&threads_working_mutex);
         scheduler_running = 0;
         pthread_cond_broadcast(&ready_queue_notempty);
         pthread_join(workers[0], NULL);
         pthread_join(workers[1], NULL);
+        printf("Bye!\n");
+        exit(0);
     }
-    exit(0);
+    else {
+        //printf("MT NOT ENABLED");
+        printf("Bye!\n");
+        exit(0);
+    }
 }
 
 int set(char *var, char *value) {
@@ -506,5 +520,3 @@ int exec(char* programs[], int programs_size, int policy, int bg, int mt) {
     }
     return err_code;
 }
-
-// HELPER: gets remainder of lines from pcb

@@ -1,6 +1,0 @@
-hello
-my name is
-Edwin
-and I really like
-the utils folder
-and make files

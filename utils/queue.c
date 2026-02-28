@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <pthread.h>
 #include "../scheduler.h"
-#include "pcb.h"
 #include "queue.h"
 
 // Queue interface for PCBs that the ReadyQueue struct wraps -
@@ -165,8 +164,16 @@ int blocking_enqueuehead_q(Queue* q, PCB* e) {
 PCB* blocking_dequeue_q(Queue* q) {
 
     pthread_mutex_lock(&ready_queue_mutex);
-    while (!q->next) {
+    // Also check scheduler_running so workers can wake up and exit
+    // when quit() sets it to 0 and broadcasts ready_queue_notempty.
+    while (!q->next && scheduler_running) {
         pthread_cond_wait(&ready_queue_notempty, &ready_queue_mutex);
+    }
+
+    // Woke up due to shutdown with nothing left — signal exit to caller.
+    if (!q->next) {
+        pthread_mutex_unlock(&ready_queue_mutex);
+        return NULL;
     }
 
     Queue* first = q->next;
@@ -199,4 +206,3 @@ int blocking_isempty_q(Queue* q) {
     pthread_mutex_unlock(&ready_queue_mutex);
     return res;
 }
-

@@ -2,7 +2,6 @@
 #include <string.h>
 #include <stdio.h>
 #include "pcb.h"
-#include "dynamicarr.h"
 
 // Data structure for PCB
 

@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include "dynamicarr.h"
 
-// This is a utiliy dynamic array interface used for storing program lines
+// This is a utility dynamic array interface used for storing program lines
 
 // Initializes array
 DynamicArr* init_arr(int capacity) {
